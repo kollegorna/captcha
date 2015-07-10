@@ -10,12 +10,19 @@ import (
 	"path"
 	"strings"
 	"time"
+	"image/color"
 )
 
-type captchaHandler struct {
-	imgWidth  int
-	imgHeight int
+type ServerConfig struct {
+   ImgWidth		int
+   ImgHeight	int
+   PrimaryColor	color.RGBA
 }
+
+type captchaHandler struct {
+	config *ServerConfig
+}
+
 
 // Server returns a handler that serves HTTP requests with image or
 // audio representations of captchas. Image dimensions are accepted as
@@ -39,8 +46,8 @@ type captchaHandler struct {
 // By default, the Server serves audio in English language. To serve audio
 // captcha in one of the other supported languages, append "lang" value, for
 // example, "?lang=ru".
-func Server(imgWidth, imgHeight int) http.Handler {
-	return &captchaHandler{imgWidth, imgHeight}
+func Server(config *ServerConfig) http.Handler {
+	return &captchaHandler{config}
 }
 
 func (h *captchaHandler) serve(w http.ResponseWriter, r *http.Request, id, ext, lang string, download bool) error {
@@ -52,7 +59,7 @@ func (h *captchaHandler) serve(w http.ResponseWriter, r *http.Request, id, ext, 
 	switch ext {
 	case ".png":
 		w.Header().Set("Content-Type", "image/png")
-		WriteImage(&content, id, h.imgWidth, h.imgHeight)
+		WriteImage(&content, id, h.config.ImgWidth, h.config.ImgHeight, h.config.PrimaryColor)
 	case ".wav":
 		w.Header().Set("Content-Type", "audio/x-wav")
 		WriteAudio(&content, id, lang)
